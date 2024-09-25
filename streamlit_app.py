@@ -20,7 +20,7 @@ if st.button("Starte Peerberry"):
             url = st.secrets["PEERBERRY_FUNCTION_INVEST_URL"]
             api_key = st.secrets["PEERBERRY_FUNCTION_INVEST_API_KEY"]
             pb_payload = {
-                "access_key": access_key
+                "access_token": access_key
             }
             response = requests.post(url + api_key, json=pb_payload)
             st.write("Iteration "+str(iteration)+" completed!" )
