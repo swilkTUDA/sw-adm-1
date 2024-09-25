@@ -14,7 +14,7 @@ if st.button("Starte Peerberry"):
     }
     response = requests.post(url + api_key, json=pb_payload)
     if response.status_code == 200:
-        access_key = response.get_json().get("access_token")
+        access_key = response.json().get("access_token")
         iteration = 0
         while iteration < 12:
             url = st.secrets["PEERBERRY_FUNCTION_INVEST_URL"]
@@ -24,7 +24,7 @@ if st.button("Starte Peerberry"):
             }
             response = requests.post(url + api_key, json=pb_payload)
             st.write("Iteration "+str(iteration)+" completed!" )
-            st.write("Result of the iteration: "+json.dumps(response.get_json()))
+            st.write("Result of the iteration: "+json.dumps(response.json()))
             iteration += 1
     else:
         st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
