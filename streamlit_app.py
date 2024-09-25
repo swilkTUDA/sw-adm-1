@@ -3,7 +3,7 @@ import requests
 import os
 import json
 
-url = "https://peerberryinvestsw.azurewebsites.net/api/peerberry_auth?code="
+url = st.secrets["PEERBERRY_FUNCTION_AUTH_URL"]
 api_key = st.secrets["PEERBERRY_FUNCTION_AUTH_API_KEY"]
 
 st.title("SW Admin Panel for Peerberry")
@@ -17,7 +17,7 @@ if st.button("Starte Peerberry"):
         access_key = response.get("access_token")
         iteration = 0
         while iteration < 12:
-            url = "https://peerberryinvestsw.azurewebsites.net/api/peerberry_invest?code="
+            url = st.secrets["PEERBERRY_FUNCTION_INVEST_URL"]
             api_key = st.secrets["PEERBERRY_FUNCTION_INVEST_API_KEY"]
             pb_payload = {
                 "access_key": access_key
