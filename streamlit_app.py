@@ -14,7 +14,7 @@ if st.button("Starte Peerberry"):
     }
     response = requests.post(url + api_key, json=pb_payload)
     if response.status_code == 200:
-        access_key = response.get("access_key")
+        access_key = response.get("access_token")
         iteration = 0
         while iteration < 12:
             url = "https://peerberryinvestsw.azurewebsites.net/api/peerberry_invest?code="
