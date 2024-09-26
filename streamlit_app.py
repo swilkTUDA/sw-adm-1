@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import json
-from azure.storage.queue import QueueClient
+from azure.storage.queue import QueueClient, TextBase64EncodePolicy
 
 url = st.secrets["PEERBERRY_FUNCTION_AUTH_URL"]
 api_key = st.secrets["PEERBERRY_FUNCTION_AUTH_API_KEY"]
@@ -42,7 +42,10 @@ if st.button("Starte Peerberry (Queue)"):
     if response.status_code == 200:
         access_key = response.json().get("access_token")
         service = QueueClient.from_connection_string(conn_str=st.secrets["QUEUE_CONNECTION_STRING"],
-                                                            queue_name="peerberry-in")
+                                                            queue_name="peerberry-in",
+            
+                                                            message_encode_policy=TextBase64EncodePolicy())
+        
         service.send_message(json.dumps({
             "access_token": access_key,
             "iteration": str(0),
