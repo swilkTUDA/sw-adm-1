@@ -34,19 +34,19 @@ if st.button("Starte Peerberry"):
         st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
     
     # ---------------------
-    if st.button("Starte Peerberry (Queue)"):
-        pb_payload = {
-            "tfaCode": tfa
-        }
-        response = requests.post(url + api_key, json=pb_payload)
-        if response.status_code == 200:
-            access_key = response.json().get("access_token")
-            service = QueueClient.from_connection_string(conn_str=st.secrets["QUEUE_CONNECTION_STRING"],
-                                                                queue_name="peerberry-in")
-            service.send_message(json.dumps({
-                "access_token": access_key,
-                "iteration": str(0),
-                "max-iteration": str(60)
-            }))
+if st.button("Starte Peerberry (Queue)"):
+    pb_payload = {
+        "tfaCode": tfa
+    }
+    response = requests.post(url + api_key, json=pb_payload)
+    if response.status_code == 200:
+        access_key = response.json().get("access_token")
+        service = QueueClient.from_connection_string(conn_str=st.secrets["QUEUE_CONNECTION_STRING"],
+                                                            queue_name="peerberry-in")
+        service.send_message(json.dumps({
+            "access_token": access_key,
+            "iteration": str(0),
+            "max-iteration": str(60)
+        }))
     else:
         st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
