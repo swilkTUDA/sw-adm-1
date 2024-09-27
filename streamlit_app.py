@@ -49,7 +49,7 @@ if st.button("Starte Peerberry (Queue)"):
         service.send_message(json.dumps({
             "access_token": access_key,
             "iteration": str(0),
-            "max-iteration": str(60)
+            "max-iteration": str(30)
         }))
     else:
         st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
