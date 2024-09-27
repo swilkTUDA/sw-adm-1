@@ -12,32 +12,6 @@ api_key = st.secrets["PEERBERRY_FUNCTION_AUTH_API_KEY"]
 st.title("SW Admin Panel for Peerberry")
 tfa = st.text_input("Two Factor Code", "")
 
-if st.button("Frage verfügbares Budget ab"):
-    pb_payload = {
-        "tfaCode": tfa
-    }
-    response = requests.post(url + api_key, json=pb_payload)
-    if response.status_code == 200:
-        access_key = response.json().get("access_token")
-        iteration = 0
-        st.subheader("Budget [€]", divider=True)
-        while iteration < 40:
-            url = st.secrets["PEERBERRY_FUNCTION_BUDGET_URL"]
-            api_key = st.secrets["PEERBERRY_FUNCTION_BUDGET_API_KEY"]
-            pb_payload = {
-                "access_token": access_key
-            }
-            response = requests.post(url + api_key, json=pb_payload)
-            if response.status_code == 200:
-               
-                st.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ": "+ response.json().get("available_money"))
-                time.sleep(30)
-            else:
-                st.write("Error in budget request: "+str(response))
-                break
-            iteration += 1
-    else:
-        st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
 
 if st.button("Starte Peerberry"):
     pb_payload = {
@@ -82,5 +56,32 @@ if st.button("Starte Peerberry (Queue)"):
             "iteration": str(0),
             "max-iteration": str(30)
         }))
+    else:
+        st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
+#-------------------------
+if st.button("Frage verfügbares Budget ab"):
+    pb_payload = {
+        "tfaCode": tfa
+    }
+    response = requests.post(url + api_key, json=pb_payload)
+    if response.status_code == 200:
+        access_key = response.json().get("access_token")
+        iteration = 0
+        st.subheader("Budget [€]", divider=True)
+        while iteration < 40:
+            url = st.secrets["PEERBERRY_FUNCTION_BUDGET_URL"]
+            api_key = st.secrets["PEERBERRY_FUNCTION_BUDGET_API_KEY"]
+            pb_payload = {
+                "access_token": access_key
+            }
+            response = requests.post(url + api_key, json=pb_payload)
+            if response.status_code == 200:
+               
+                st.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " - Available: "+ response.json().get("available_money")+"€")
+                time.sleep(30)
+            else:
+                st.write("Error in budget request: "+str(response))
+                break
+            iteration += 1
     else:
         st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
