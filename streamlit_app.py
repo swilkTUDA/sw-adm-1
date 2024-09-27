@@ -3,6 +3,8 @@ import requests
 import json
 from azure.storage.queue import QueueClient, TextBase64EncodePolicy
 import time
+import datetime
+
 
 url = st.secrets["PEERBERRY_FUNCTION_AUTH_URL"]
 api_key = st.secrets["PEERBERRY_FUNCTION_AUTH_API_KEY"]
@@ -18,6 +20,7 @@ if st.button("Frage verfügbares Budget ab"):
     if response.status_code == 200:
         access_key = response.json().get("access_token")
         iteration = 0
+        st.subheader("Budget [€]", divider=True)
         while iteration < 12:
             url = st.secrets["PEERBERRY_FUNCTION_BUDGET_URL"]
             api_key = st.secrets["PEERBERRY_FUNCTION_BUDGET_API_KEY"]
@@ -26,8 +29,8 @@ if st.button("Frage verfügbares Budget ab"):
             }
             response = requests.post(url + api_key, json=pb_payload)
             if response.status_code == 200:
-                st.subheader("Budget [€]", divider=True)
-                st.write(json.dumps(response.json()))
+               
+                st.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ": "+ response.json().get("available_money"))
                 time.sleep(15)
             else:
                 st.write("Error in budget request: "+str(response))
