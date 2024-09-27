@@ -21,7 +21,7 @@ if st.button("Frage verfügbares Budget ab"):
         access_key = response.json().get("access_token")
         iteration = 0
         st.subheader("Budget [€]", divider=True)
-        while iteration < 12:
+        while iteration < 40:
             url = st.secrets["PEERBERRY_FUNCTION_BUDGET_URL"]
             api_key = st.secrets["PEERBERRY_FUNCTION_BUDGET_API_KEY"]
             pb_payload = {
@@ -31,7 +31,7 @@ if st.button("Frage verfügbares Budget ab"):
             if response.status_code == 200:
                
                 st.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ": "+ response.json().get("available_money"))
-                time.sleep(15)
+                time.sleep(30)
             else:
                 st.write("Error in budget request: "+str(response))
                 break
