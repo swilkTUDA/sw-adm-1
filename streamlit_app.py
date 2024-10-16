@@ -71,25 +71,8 @@ with tab1:
                 # Plot a pie chart
                 fig, ax = plt.subplots()
                 ax.pie(df_countries['Investments'], labels=df_countries['Country'], autopct='%1.1f%%', startangle=140)
-                ax.axis('equal')  # Equal aspect ratio ensures the pie chart is circular.
                 st.pyplot(fig)
-            iteration = 0
-            st.subheader("Budget [€]", divider=True)
-            while iteration < 40:
-                url = st.secrets["PEERBERRY_FUNCTION_BUDGET_URL"]
-                api_key = st.secrets["PEERBERRY_FUNCTION_BUDGET_API_KEY"]
-                pb_payload = {
-                    "access_token": access_key
-                }
-                response = requests.post(url + api_key, json=pb_payload)
-                if response.status_code == 200:
-                
-                    st.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " - Available: "+ response.json().get("available_money")+"€")
-                    time.sleep(30)
-                else:
-                    st.write("Error in budget request: "+str(response))
-                    break
-                iteration += 1
+            
         else:
             st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
 with tab2:
