@@ -3,3 +3,4 @@ requests
 azure-storage-queue
 pandas
 matplotlib
+azure-data-tables
