@@ -31,7 +31,7 @@ with tab1:
             service.send_message(json.dumps({
                 "access_token": access_key,
                 "iteration": str(0),
-                "max-iteration": str(30)
+                "max-iteration": str(10)
             }))
         else:
             st.write("Access Key nicht erhalten: FEHLER in AUTH!" )
