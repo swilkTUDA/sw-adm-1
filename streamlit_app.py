@@ -62,7 +62,7 @@ with tab1:
                 st.write(f"Balance Growth Amount: {data['balanceGrowthAmount']} {data['currencyIso']}")
 
                 # Investments by Countries
-                st.subheader("Investments By Countries")
+                st.subheader("Investments By Country")
                 countries = data['investmentsByCountries']
 
                 # Convert countries data to Pandas DataFrame
