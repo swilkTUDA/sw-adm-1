@@ -16,7 +16,7 @@ def load_data():
 
     for entity in entities:
         # those who have the field Datum set to - are newer entries the date format of old entries is a german format which needs to be processed differently TODO
-        if "-" in entity["Datum"] and entity["EigeneKategorie"] not in ['Umbuchung', 'Kreditkarte']:
+        if "-" in str(entity["Datum"]) and entity["EigeneKategorie"] not in ['Umbuchung', 'Kreditkarte']:
 
             entity['Betrag'] = entity['Betrag'].replace(",", ".")
             data.append(entity)
@@ -26,7 +26,7 @@ def load_data():
 def render_haushaltsbuch_plots():
     if 'data' not in st.session_state:
         df = load_data()
-        df['Datum'] = pd.to_datetime(df['Datum'], format='%Y-%m-%d %H:%M:%S')
+        df['Datum'] = pd.to_datetime(str(df['Datum']), format='%Y-%m-%d %H:%M:%S')
         df['Betrag'] = pd.to_numeric(df['Betrag']).abs()  # Ensure 'Betrag' is numeric AND ABSOLUTE
         st.session_state['data'] = df
 
