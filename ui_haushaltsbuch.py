@@ -18,7 +18,7 @@ def load_data():
         # those who have the field Datum set to - are newer entries the date format of old entries is a german format which needs to be processed differently TODO
         if "-" in str(entity["Datum"]) and entity["EigeneKategorie"] not in ['Umbuchung', 'Kreditkarte']:
 
-            entity['Betrag'] = entity['Betrag'].replace(",", ".")
+            entity['Betrag'] = entity['Betrag'].replace(".", "").replace(",", ".")
             data.append(entity)
             
     return pd.DataFrame(data)
