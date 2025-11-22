@@ -13,7 +13,7 @@ url = st.secrets["PEERBERRY_FUNCTION_AUTH_URL"]
 api_key = st.secrets["PEERBERRY_FUNCTION_AUTH_API_KEY"]
 
 st.title("SW Admin Panel for Peerberry")
-tab1, tab2, tab3 = st.tabs(["Pb Invest", "Haushaltsbuch", "Tourenrechner"])
+tab1, tab2, tab3, tab4 = st.tabs(["Pb Invest", "Haushaltsbuch", "Tourenrechner", "Bereitschaftsrechner"])
 with tab1:
     tfa = st.text_input("Two Factor Code", "")
     if st.button("Starte Peerberry (Queue)"):
@@ -133,3 +133,102 @@ with tab3:
     # Button zum Speichern der Werte
     if st.button("Werte speichern"):
         save_values_to_azure(fahrten_arbeit, fahrten_studio)
+with tab4:
+    st.subheader("Bereitschafts-Tage Einstellungen")
+    AZURE_STORAGE_CONNECTION_STRING = st.secrets["HAUSHALTSBUCH_TABLE_CONNECTION"]
+    TABLE_NAME = st.secrets["BEREITSCHAFTSRECHNER_TABLE_NAME"]
+    service = TableServiceClient.from_connection_string(conn_str=AZURE_STORAGE_CONNECTION_STRING)
+    table_client = service.get_table_client(table_name=TABLE_NAME)
+    # Use current month and year for keys
+    now = datetime.datetime.now()
+    PARTITION_KEY = f"bereitschaft_{now.year}_{now.month:02d}"
+    ROW_KEY = "settings"
+    # Try to load default values from Azure Table
+    try:
+        entity = table_client.get_entity(partition_key=PARTITION_KEY, row_key=ROW_KEY)
+        bereitschaft_week_default = int(entity.get('bereitschaft_week', 0))
+        bereitschaft_weekend_default = int(entity.get('bereitschaft_weekend', 0))
+    except Exception:
+        bereitschaft_week_default = 0
+        bereitschaft_weekend_default = 0
+
+    BEREITSCHAFTSSATZ_WOCHE_PRIO1 = st.secrets["BEREITSCHAFTSSATZ_WOCHE_PRIO1"]
+    BEREITSCHAFTSSATZ_WOCHE_PRIO2 = st.secrets["BEREITSCHAFTSSATZ_WOCHE_PRIO2"]
+    BEREITSCHAFTSSATZ_WOCHENENDE_PRIO1 = st.secrets["BEREITSCHAFTSSATZ_WOCHENENDE_PRIO1"]
+    BEREITSCHAFTSSATZ_WOCHENENDE_PRIO2 = st.secrets["BEREITSCHAFTSSATZ_WOCHENENDE_PRIO2"]
+    BEREITSCHAFT_STUNDENSATZ_EURO = st.secrets["BEREITSCHAFT_STUNDENSATZ_EURO"]
+
+    bereitschaft_week = st.number_input(
+        "Anzahl der Bereitschaftstage unter der Woche (Mo-Fr)", min_value=0, max_value=30, value=bereitschaft_week_default, step=1)
+    bereitschaft_weekend = st.number_input(
+        "Anzahl der Bereitschaftstage am Wochenende (Sa-So)", min_value=0, max_value=10, value=bereitschaft_weekend_default, step=1)
+    # Load default hours from Azure Table if available
+    try:
+        hours_default = int(entity.get('bereitschaft_hours', 0))
+    except Exception:
+        hours_default = 0
+    bereitschaft_hours = st.number_input(
+        "Anzahl der Bereitschafts-Stunden im Monat", min_value=0, max_value=300, value=hours_default, step=1)
+
+    if st.button("Bereitschafts-Tage speichern"):
+        try:
+            entity = {
+                'PartitionKey': PARTITION_KEY,
+                'RowKey': ROW_KEY,
+                'bereitschaft_week': bereitschaft_week,
+                'bereitschaft_weekend': bereitschaft_weekend,
+                'bereitschaft_hours': bereitschaft_hours
+            }
+            table_client.upsert_entity(entity)
+            st.success("Bereitschafts-Tage und Stunden erfolgreich gespeichert!")
+        except Exception as e:
+            st.error(f"Fehler beim Speichern der Bereitschafts-Tage und Stunden: {e}")
+
+        # Show Bereitschaftstage for current and all past months
+    st.subheader("Bereitschafts-Tage Übersicht (alle Monate)")
+    all_entities = list(table_client.list_entities())
+        # Filter for settings rows and sort by month descending
+    month_rows = [e for e in all_entities if e.get('RowKey') == 'settings']
+    def extract_month(pk):
+            try:
+                parts = pk.split('_')
+                year = int(parts[1])
+                month = int(parts[2])
+                return year, month
+            except Exception:
+                return (0, 0)
+    month_rows.sort(key=lambda e: extract_month(e['PartitionKey']), reverse=True)
+    data = []
+    for e in month_rows:
+        year, month = extract_month(e['PartitionKey'])
+        week = int(e.get('bereitschaft_week', 0))
+        weekend = int(e.get('bereitschaft_weekend', 0))
+        hours = int(e.get('bereitschaft_hours', 0))
+        try:
+            money_days = week * float(BEREITSCHAFTSSATZ_WOCHE_PRIO1) + weekend * float(BEREITSCHAFTSSATZ_WOCHENENDE_PRIO2)
+        except Exception:
+            money_days = 0.0
+        try:
+            money_hours = hours * float(BEREITSCHAFT_STUNDENSATZ_EURO)
+        except Exception:
+            money_hours = 0.0
+        brutto = money_days + money_hours
+        netto = brutto * 0.5
+        data.append({
+            'Jahr': year,
+            'Monat': month,
+            'Bereitschaftstage (Woche)': week,
+            'Bereitschaftstage (Wochenende)': weekend,
+            'Bereitschafts-Stunden': hours,
+            'Summe Tage': week + weekend,
+            'Geld aus Tagen (€)': round(money_days, 2),
+            'Geld aus Stunden (€)': round(money_hours, 2),
+            'Netto (€)': round(netto, 2)
+        })
+    if data:
+            df = pd.DataFrame(data)
+            st.dataframe(df)
+    else:
+            st.info("Keine Bereitschafts-Tage Daten gefunden.")
+
+    
