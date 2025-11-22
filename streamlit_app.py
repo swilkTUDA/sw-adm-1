@@ -205,7 +205,7 @@ with tab4:
         weekend = int(e.get('bereitschaft_weekend', 0))
         hours = int(e.get('bereitschaft_hours', 0))
         try:
-            money_days = week * float(BEREITSCHAFTSSATZ_WOCHE_PRIO1) + weekend * float(BEREITSCHAFTSSATZ_WOCHENENDE_PRIO2)
+            money_days = week * float(BEREITSCHAFTSSATZ_WOCHE_PRIO2) + weekend * float(BEREITSCHAFTSSATZ_WOCHENENDE_PRIO1)
         except Exception:
             money_days = 0.0
         try:
