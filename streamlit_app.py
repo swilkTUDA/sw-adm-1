@@ -162,13 +162,19 @@ with tab4:
         "Anzahl der Bereitschaftstage unter der Woche (Mo-Fr)", min_value=0, max_value=30, value=bereitschaft_week_default, step=1)
     bereitschaft_weekend = st.number_input(
         "Anzahl der Bereitschaftstage am Wochenende (Sa-So)", min_value=0, max_value=10, value=bereitschaft_weekend_default, step=1)
-    # Load default hours from Azure Table if available
+    # Load default hours (weekday / weekend) from Azure Table if available
     try:
-        hours_default = int(entity.get('bereitschaft_hours', 0))
+        hours_week_default = int(entity.get('bereitschaft_hours_week', 0))
     except Exception:
-        hours_default = 0
-    bereitschaft_hours = st.number_input(
-        "Anzahl der Bereitschafts-Stunden im Monat", min_value=0, max_value=300, value=hours_default, step=1)
+        hours_week_default = 0
+    try:
+        hours_weekend_default = int(entity.get('bereitschaft_hours_weekend', 0))
+    except Exception:
+        hours_weekend_default = 0
+    bereitschaft_hours_week = st.number_input(
+        "Anzahl der Bereitschafts-Stunden im Monat (Woche)", min_value=0, max_value=300, value=hours_week_default, step=1)
+    bereitschaft_hours_weekend = st.number_input(
+        "Anzahl der Bereitschafts-Stunden im Monat (Wochenende)", min_value=0, max_value=300, value=hours_weekend_default, step=1)
 
     if st.button("Bereitschafts-Tage speichern"):
         try:
@@ -177,7 +183,8 @@ with tab4:
                 'RowKey': ROW_KEY,
                 'bereitschaft_week': bereitschaft_week,
                 'bereitschaft_weekend': bereitschaft_weekend,
-                'bereitschaft_hours': bereitschaft_hours
+                'bereitschaft_hours_week': bereitschaft_hours_week,
+                'bereitschaft_hours_weekend': bereitschaft_hours_weekend
             }
             table_client.upsert_entity(entity)
             st.success("Bereitschafts-Tage und Stunden erfolgreich gespeichert!")
@@ -203,26 +210,35 @@ with tab4:
         year, month = extract_month(e['PartitionKey'])
         week = int(e.get('bereitschaft_week', 0))
         weekend = int(e.get('bereitschaft_weekend', 0))
-        hours = int(e.get('bereitschaft_hours', 0))
+        hours_week = int(e.get('bereitschaft_hours_week', 0))
+        hours_weekend = int(e.get('bereitschaft_hours_weekend', 0))
         try:
             money_days = week * float(BEREITSCHAFTSSATZ_WOCHE_PRIO2) + weekend * float(BEREITSCHAFTSSATZ_WOCHENENDE_PRIO1)
         except Exception:
             money_days = 0.0
         try:
-            money_hours = hours * float(BEREITSCHAFT_STUNDENSATZ_EURO)
+            money_hours_week = hours_week * float(BEREITSCHAFT_STUNDENSATZ_EURO)
         except Exception:
-            money_hours = 0.0
-        brutto = money_days + money_hours
+            money_hours_week = 0.0
+        try:
+            money_hours_weekend = hours_weekend * float(BEREITSCHAFT_STUNDENSATZ_EURO)* 1.5
+        except Exception:
+            money_hours_weekend = 0.0
+        money_hours_total = money_hours_week + money_hours_weekend
+        brutto = money_days + money_hours_total
         netto = brutto * 0.5
         data.append({
             'Jahr': year,
             'Monat': month,
             'Bereitschaftstage (Woche)': week,
             'Bereitschaftstage (Wochenende)': weekend,
-            'Bereitschafts-Stunden': hours,
+            'Bereitschafts-Stunden (Woche)': hours_week,
+            'Bereitschafts-Stunden (Wochenende)': hours_weekend,
             'Summe Tage': week + weekend,
             'Geld aus Tagen (€)': round(money_days, 2),
-            'Geld aus Stunden (€)': round(money_hours, 2),
+            'Geld aus Stunden (Woche) (€)': round(money_hours_week, 2),
+            'Geld aus Stunden (Wochenende) (€)': round(money_hours_weekend, 2),
+            'Geld aus Stunden (Summe) (€)': round(money_hours_total, 2),
             'Netto (€)': round(netto, 2)
         })
     if data:
